@@ -299,10 +299,10 @@ def draw_fet(
             cell.shapes(nwell_layer).clear()
             cell.shapes(hvi_layer).clear()
             cell.shapes(hvntm_layer).clear()
-            left, bottom, right, top = c_inst_xmin - nwell_enclosing, c_inst_ymin - nwell_enclosing, c_inst_xmax + nwell_enclosing, c_inst_ymax + nwell_enclosing, nwell_layer
-            add_rect(left, bottom, right, top)
+            left, bottom, right, top = c_inst_xmin - nwell_enclosing, c_inst_ymin - nwell_enclosing, c_inst_xmax + nwell_enclosing, c_inst_ymax + nwell_enclosing
+            add_rect(left, bottom, right, top, nwell_layer)
             if has_hvi:
-                add_rect(left, bottom, right, top)
+                add_rect(left, bottom, right, top, hvi_layer)
                 if dev_type == 'nfet':
                     add_rect(0-hv_enclosing, 0-hv_enclosing, l_d+hv_enclosing, w+hv_enclosing, hvntm_layer)
                 
