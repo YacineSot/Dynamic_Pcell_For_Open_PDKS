@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<klayout-macro>
+ <description>Load Custom Pcells</description>
+ <version>1.0</version>
+ <category>pymacros</category>
+ <prolog/>
+ <epilog/>
+ <doc/>
+ <autorun>true</autorun>
+ <autorun-early>false</autorun-early>
+ <priority>0</priority>
+ <shortcut/>
+ <show-in-menu>true</show-in-menu>
+ <group-name/>
+ <menu-path>yacine_menu&gt;end("Y_Macros").end</menu-path>
+ <interpreter>python</interpreter>
+ <dsl-interpreter-name/>
+ <text>
+import os
+import sys
+import klayout.db as kdb
+
+# 1. Dynamically append the current macro directory to the Python path
+macro_dir = os.path.dirname(os.path.abspath(__file__))
+if macro_dir not in sys.path:
+    sys.path.append(macro_dir)
+cells_dir = os.path.join(macro_dir, "custom_cells", "sky130")
+if cells_dir not in sys.path:
+    sys.path.append(cells_dir)
+# 2. Module Hot-Reloading: Clear out existing loaded macro modules from sys.modules
+# This guarantees that Python fetches your latest .py file updates from the disk.
+# 2. Module Hot-Reloading: Clear out existing loaded macro modules from sys.modules
+module_targets = [
+    "dynamic_pcell", "base_definitions", "layers_def", "via_generator", 
+    "draw_guard_ring", "draw_fet", "fet", "sky_base_definitions"
+]
+
+# Iterate over a copied list of keys because dict size cannot change during iteration
+for loaded_module in list(sys.modules.keys()):
+    # If the loaded module name ends with or contains any of our targets, wipe it
+    if any(loaded_module.endswith(target) or (target in loaded_module) for target in module_targets):
+        del sys.modules[loaded_module]
+
+# Now import the freshly reloaded modules
+from custom_pcells.sky130.dynamic_pcell import dynamic_pcell
+from custom_pcells.sky130.fet import nfet, pfet
+
+class CustomSkyLibrary(kdb.Library):
+    """
+    The KLayout Library class that will hold the custom PCells.
+    """
+    def __init__(self):
+        super(CustomSkyLibrary, self).__init__()
+        self.description = "Custom Skywater130 PCells"
+
+        # Place your PCell classes into an array for batch registration
+        pcells_to_register = [
+            ("dynamic_pcell", dynamic_pcell()),
+            ("nfet", nfet()),
+            ("pfet", pfet())
+        ]
+
+        # Iterate through the array and register each PCell to this library
+        for name, pcell_instance in pcells_to_register:
+            if pcell_instance is not None:
+                self.layout().register_pcell(name, pcell_instance)
+
+        # Register the library globally
+        self.register("custom_pcell")
+
+
+def autorun_init():
+    """Checks for Sky PDK, reloads existing library, and initializes PCells."""
+    tech_names = kdb.Technology.technology_names()
+    is_sky_active = any("sky" in tech.lower() for tech in tech_names)
+
+    if is_sky_active:
+        lib_name = "custom_pcell"
+        
+        # 3. Check if the library is already registered in the KLayout engine
+        existing_lib = kdb.Library.library_by_name(lib_name)
+        if existing_lib:
+            print(f"[Custom PCell] Library '{lib_name}' already exists. Unregistering for reload...")
+            # Properly destroy and unregister the library from the KLayout engine
+            existing_lib.delete()
+            
+        # 4. Instantiate and register the new library globally
+        # (We assign it to a global variable to prevent Python garbage collection from destroying it)
+        global custom_sky_lib_instance
+        custom_sky_lib_instance = CustomSkyLibrary()
+        print(f"[Custom PCell] '{lib_name}' library successfully loaded and registered.")
+        
+    else:
+        print("[Custom PCell] Sky PDK not found in active technologies. Skipping library registration.")
+
+# Execute the autorun routine
+autorun_init()</text>
+</klayout-macro>
