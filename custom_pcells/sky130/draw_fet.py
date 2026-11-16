@@ -245,12 +245,12 @@ def draw_fet(
     c_inst_xmin, c_inst_ymin = bbox.left, bbox.bottom
     c_inst_xmax, c_inst_ymax = bbox.right, bbox.top
 
-    if has_nwell and bulk != "guard ring":
+    if has_nwell:
         add_rect(c_inst_xmin - nwell_enclosing, c_inst_ymin - nwell_enclosing, c_inst_xmax + nwell_enclosing, c_inst_ymax + nwell_enclosing, nwell_layer)
-    elif has_nwell and bulk == "guard ring":
-        nwell_xmin, nwell_ymin = c_inst_xmin - diff_tap_spacing - grw - tap_sdm_enc - nwell_enclosing, c_inst_ymin - poly_tap_spacing - grw - tap_sdm_enc - nwell_enclosing
-        nwell_xmax, nwell_ymax = c_inst_xmax + diff_tap_spacing + grw + tap_sdm_enc + nwell_enclosing, c_inst_ymax + poly_tap_spacing + grw + tap_sdm_enc + nwell_enclosing
-        add_rect(nwell_xmin, nwell_ymin, nwell_xmax, nwell_ymax, nwell_layer)
+    # elif has_nwell and bulk == "guard ring":
+    #     nwell_xmin, nwell_ymin = c_inst_xmin - diff_tap_spacing - grw - tap_sdm_enc - nwell_enclosing, c_inst_ymin - poly_tap_spacing - grw - tap_sdm_enc - nwell_enclosing
+    #     nwell_xmax, nwell_ymax = c_inst_xmax + diff_tap_spacing + grw + tap_sdm_enc + nwell_enclosing, c_inst_ymax + poly_tap_spacing + grw + tap_sdm_enc + nwell_enclosing
+    #     add_rect(nwell_xmin, nwell_ymin, nwell_xmax, nwell_ymax, nwell_layer)
 
     if type.endswith(("01v8_lvt", "03v3_nvt", "05v0_nvt")):
         add_rect(sd_l-gate_lvt_enc, -gate_lvt_enc, sd_l + ng*l+(ng-1)*inter_sd_l + gate_lvt_enc, w+gate_lvt_enc, lvtn_layer)
@@ -260,15 +260,10 @@ def draw_fet(
     if type.endswith("01v8_hvt"):
         add_rect(sd_l-gate_hvt_enc, -gate_hvt_enc, sd_l + ng*l+(ng-1)*inter_sd_l + gate_hvt_enc, w+gate_hvt_enc, hvtp_layer)
 
-    if type in ["sky130_fd_pr__nfet_g5v0d10v5", "sky130_fd_pr__nfet_05v0_nvt", "sky130_fd_pr__nfet_03v3_nvt", "sky130_fd_pr__pfet_g5v0d10v5"]:
-        if bulk != "guard ring":
-            hvi_xmin, hvi_ymin = c_inst_xmin - hv_enclosing, c_inst_ymin - hv_enclosing
-            hvi_xmax, hvi_ymax = c_inst_xmax + hv_enclosing, c_inst_ymax + hv_enclosing
-        else:
-            hvi_xmin = c_inst_xmin - diff_tap_spacing - grw - hv_enclosing
-            hvi_ymin = c_inst_ymin - poly_tap_spacing - grw - hv_enclosing
-            hvi_xmax = c_inst_xmax + diff_tap_spacing - grw + hv_enclosing
-            hvi_ymax = c_inst_ymax + poly_tap_spacing - grw + hv_enclosing
+    has_hvi = type in ["sky130_fd_pr__nfet_g5v0d10v5", "sky130_fd_pr__nfet_05v0_nvt", "sky130_fd_pr__nfet_03v3_nvt", "sky130_fd_pr__pfet_g5v0d10v5"]
+    if has_hvi:
+        hvi_xmin, hvi_ymin = c_inst_xmin - hv_enclosing, c_inst_ymin - hv_enclosing
+        hvi_xmax, hvi_ymax = c_inst_xmax + hv_enclosing, c_inst_ymax + hv_enclosing
         
         add_rect(hvi_xmin, hvi_ymin, hvi_xmax, hvi_ymax, hvi_layer)
         if dev_type == 'nfet':
@@ -297,4 +292,19 @@ def draw_fet(
                 cell.shapes(layer).insert(shape, trans)
         
         cell.layout().delete_cell(gr_cell.cell_index())
+        bbox = cell.dbbox()
+        c_inst_xmin, c_inst_ymin = bbox.left, bbox.bottom
+        c_inst_xmax, c_inst_ymax = bbox.right, bbox.top
+        if has_nwell:
+            cell.shapes(nwell_layer).clear()
+            cell.shapes(hvi_layer).clear()
+            cell.shapes(hvntm_layer).clear()
+            add_rect(c_inst_xmin - nwell_enclosing, c_inst_ymin - nwell_enclosing, c_inst_xmax + nwell_enclosing, c_inst_ymax + nwell_enclosing, nwell_layer)
+        if has_hvi:
+            hvi_xmin, hvi_ymin = c_inst_xmin - hv_enclosing, c_inst_ymin - hv_enclosing
+            hvi_xmax, hvi_ymax = c_inst_xmax + hv_enclosing, c_inst_ymax + hv_enclosing
+            
+            add_rect(hvi_xmin, hvi_ymin, hvi_xmax, hvi_ymax, hvi_layer)
+            if dev_type == 'nfet':
+                add_rect(0-hv_enclosing, 0-hv_enclosing, l_d+hv_enclosing, w+hv_enclosing, hvntm_layer)
     
