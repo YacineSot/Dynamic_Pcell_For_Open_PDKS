@@ -105,8 +105,6 @@ The installation process depends on the open-source PDK you are targeting.
    * Open KLayout and open the Macro Development environment by pressing `F5`.
    * Right-click in the Macro Tree and select **Add Directory...** 
    * Select the folder you just cloned.
-3. **Initialize:** Find and run the `auto_register` script within the KLayout macro editor. 
-   * *Note: You only need to manually run this script once. After the first run, the PCells will automatically register and load every time KLayout starts.*
 
 ### For IHP (sg13g2 / sg13cmos5l)
 To use the dynamic PCell generator with the IHP PDK, you need to use a modified version of the PDK.
