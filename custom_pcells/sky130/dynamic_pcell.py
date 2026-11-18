@@ -90,7 +90,6 @@ class dynamic_pcell(dynamic_pcell_base, pya.PCellDeclarationHelper, sky_base_def
         elif isinstance(ptype, (list, tuple)):
             param_type = self.parse_param_type_from_type(ptype[0])
             choises = list(ptype)
-        print(description)
         param = self.param(name = param_name, value_type = param_type, default=default_value, description=description, unit=unit, tooltip=tooltip)
         
         for choice in choises:
